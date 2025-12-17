@@ -34,7 +34,7 @@ jobs:
         uses: bridgecrewio/checkov-action@master
         with:
           directory: DriftDetection/
-          file: DriftDetection/main.tf
+          file: main.tf
         
 
       - name: Setup Terraform
