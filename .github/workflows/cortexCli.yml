@@ -22,16 +22,17 @@ jobs:
         node-version: 22
     - name: Verify Node.js Version
       run: node -v
-    - name: Download cortexcli
+    - name: Download cortexcli (debug)
       run: |
         set -x
-        crtx_resp=$(curl "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64" \
+        crtx_resp=$(curl -s -w "\nHTTP_STATUS:%{http_code}\n" \
+          "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64" \
           -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" \
-          -H "Authorization: ${CORTEX_API_KEY}")
-        crtx_url=$(echo $crtx_resp | jq -r ".signed_url")
-        curl -o cortexcli $crtx_url
-        chmod +x cortexcli
-        ./cortexcli --version
+          -H "Authorization: Bearer ${CORTEX_API_KEY}")
+    
+        echo "=== RAW RESPONSE ==="
+        echo "$crtx_resp"
+
     - name: Run Cortex CLI Code Scan
       run: |
         ./cortexcli \
