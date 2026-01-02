@@ -4,126 +4,43 @@ on:
     branches:
       - main
   workflow_dispatch:
-
 env:
-  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
-  CORTEX_API_KEY_ID: ${{ secrets.CORTEX_API_KEY_ID }}
-  CORTEX_API_URL: ${{ vars.CORTEX_API_URL }}  # O ${{ secrets.CORTEX_API_URL }}
-
+  CORTEX_API_KEY: ${{secrets.CORTEX_API_KEY}}
+  CORTEX_API_KEY_ID: ${{secrets.CORTEX_API_KEY_ID}}
+  CORTEX_API_URL: ${{vars.CORTEX_API_URL}} 
+  
 jobs:
   cortex-code-scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4  # Actualizado a v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Verify Node.js Version
-        run: node -v
-
-      - name: Download cortexcli (con manejo de errores)
-        run: |
-          set -e  # Salir al primer error
-          set -x  # Debug mode
-          
-          echo "API URL: ${CORTEX_API_URL}"
-          echo "API Key ID length: ${#CORTEX_API_KEY_ID}"
-          echo "API Key length: ${#CORTEX_API_KEY}"
-          
-          # Verificar que las variables estén definidas
-          if [ -z "${CORTEX_API_URL}" ] || [ -z "${CORTEX_API_KEY_ID}" ] || [ -z "${CORTEX_API_KEY}" ]; then
-            echo "ERROR: Una o más variables de entorno están vacías"
-            echo "CORTEX_API_URL: ${CORTEX_API_URL}"
-            echo "CORTEX_API_KEY_ID está definida: $( [ -n "${CORTEX_API_KEY_ID}" ] && echo "Sí" || echo "No" )"
-            echo "CORTEX_API_KEY está definida: $( [ -n "${CORTEX_API_KEY}" ] && echo "Sí" || echo "No" )"
-            exit 1
-          fi
-          
-          # Construir URL completa
-          DOWNLOAD_URL="${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64"
-          echo "URL de descarga: ${DOWNLOAD_URL}"
-          
-          # Hacer la petición con verificación de estado HTTP
-          echo "Solicitando URL firmada..."
-          crtx_resp=$(curl -s -w "\n%{http_code}" \
-            "${DOWNLOAD_URL}" \
-            -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" \
-            -H "Authorization: ${CORTEX_API_KEY}")
-          
-          # Separar contenido y código HTTP
-          crtx_http_code=$(echo "${crtx_resp}" | tail -n1)
-          crtx_content=$(echo "${crtx_resp}" | sed '$d')
-          
-          echo "Código HTTP: ${crtx_http_code}"
-          
-          if [ "${crtx_http_code}" != "200" ]; then
-            echo "ERROR: La API devolvió código ${crtx_http_code}"
-            echo "Respuesta: ${crtx_content}"
-            exit 1
-          fi
-          
-          if [ -z "${crtx_content}" ]; then
-            echo "ERROR: Respuesta vacía de la API"
-            exit 1
-          fi
-          
-          echo "Respuesta API: ${crtx_content}"
-          
-          # Extraer URL firmada
-          crtx_url=$(echo "${crtx_content}" | jq -r '.signed_url // empty')
-          
-          if [ -z "${crtx_url}" ] || [ "${crtx_url}" = "null" ]; then
-            echo "ERROR: No se pudo extraer 'signed_url' de la respuesta"
-            echo "Respuesta completa: ${crtx_content}"
-            exit 1
-          fi
-          
-          echo "URL firmada obtenida: ${crtx_url}"
-          
-          # Descargar cortexcli
-          echo "Descargando cortexcli..."
-          curl -L -f -o cortexcli "${crtx_url}" || {
-            echo "ERROR: Falló la descarga de cortexcli"
-            exit 1
-          }
-          
-          # Verificar y hacer ejecutable
-          if [ ! -f "cortexcli" ]; then
-            echo "ERROR: El archivo cortexcli no fue descargado"
-            exit 1
-          fi
-          
-          chmod +x cortexcli
-          
-          # Verificar versión
-          echo "Verificando versión de cortexcli..."
-          ./cortexcli --version || {
-            echo "ERROR: No se pudo ejecutar cortexcli --version"
-            exit 1
-          }
-
-      - name: Run Cortex CLI Code Scan
-        run: |
-          set -e
-          
-          echo "Iniciando escaneo de código..."
-          echo "Directorio: $(pwd)"
-          echo "Repo ID: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          
-          ./cortexcli \
-            --api-base-url "${CORTEX_API_URL}" \
-            --api-key "${CORTEX_API_KEY}" \
-            --api-key-id "${CORTEX_API_KEY_ID}" \
-            code scan \
-            --directory "${{ github.workspace }}" \
-            --repo-id "${{ github.repository }}" \
-            --branch "${{ github.ref_name }}" \
-            --source "GITHUB_ACTIONS" \
-            --create-repo-if-missing
-          
-          echo "Escaneo completado exitosamente"
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Verify Node.js Version
+      run: node -v
+    - name: Download cortexcli
+      run: |
+        set -x
+        crtx_resp=$(wget "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64" \
+          -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" \
+          -H "Authorization: ${CORTEX_API_KEY}")
+        crtx_url=$(echo $crtx_resp | jq -r ".signed_url")
+        curl -o cortexcli $crtx_url
+        chmod +x cortexcli
+        ./cortexcli --version
+    - name: Run Cortex CLI Code Scan
+      run: |
+        ./cortexcli \
+          --api-base-url "${CORTEX_API_URL}" \
+          --api-key "${CORTEX_API_KEY}" \
+          --api-key-id "${CORTEX_API_KEY_ID}" \
+          code scan \
+          --directory "${{github.workspace}}" \
+          --repo-id "${{github.repository}}" \
+          --branch "${{github.ref_name}}" \
+          --source "GITHUB_ACTIONS" \
+          --create-repo-if-missing
