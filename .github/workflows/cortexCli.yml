@@ -5,9 +5,9 @@ on:
       - main
   workflow_dispatch:
 env:
-  CORTEX_API_KEY: "EcV4ixVk5ocZgCnezPs4V9AGKNST36Svn7mBereBuo1kcAVIurFpAMmy10QdsY3t0rESpsQJqNq1TkdCLcTiCdoA7pJ9pYEvXwO0FIK8p7W3fV52ivqEczdK5WNUBIY0"
-  CORTEX_API_KEY_ID: "775"  
-  CORTEX_API_URL: "https://api-pcscortexcloud.xdr.us.paloaltonetworks.com"
+  CORTEX_API_KEY: ${{secrets.CORTEX_API_KEY}}
+  CORTEX_API_KEY_ID: ${{secrets.CORTEX_API_KEY_ID}}
+  CORTEX_API_URL: ${{vars.CORTEX_API_URL}} 
   
 jobs:
   cortex-code-scan:
