@@ -10,3 +10,4 @@ resource "aws_instance" "non_compliant_example" {
     Name = "non-compliant-instance"
   }
 }
+
