@@ -37,6 +37,7 @@ resource azurerm_windows_virtual_machine "windows_machine" {
   network_interface_ids = [azurerm_network_interface.ni_win.id]
   resource_group_name   = azurerm_resource_group.example.name
   size                  = "Standard_F2"
+  password: "testdaaz123"
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
