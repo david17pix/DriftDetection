@@ -25,6 +25,7 @@ resource azurerm_linux_virtual_machine "linux_machine" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
+  apiKey="Abc123!@#"
 
 
 }
