@@ -19,6 +19,8 @@ resource "azurerm_storage_container" "container" {
   name                  = "yor-test-container"
   storage_account_name  = azurerm_storage_account.sa.name
   container_access_type = "private"
+  dantolineztest = slakdnjlewkq
+  dantolineztest = ekwlmdsalke
 }
 
 resource "random_integer" "suffix" {
