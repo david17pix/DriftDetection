@@ -7,6 +7,7 @@ resource "aws_instance" "non_compliant_example" {
   instance_type = "t3.small"
 
   tags = {
+
     Name = "non-compliant-instance"
   }
 }
