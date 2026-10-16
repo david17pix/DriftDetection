@@ -39,9 +39,6 @@ jobs:
           --api-key "${CORTEX_API_KEY}" \
           --api-key-id "${CORTEX_API_KEY_ID}" \
           code scan \
-          --external-checks-dir custom-appsec-rule \
           --directory "${{github.workspace}}" \
           --repo-id "${{github.repository}}" \
-          --branch "${{github.ref_name}}" \
-          --source "GITHUB_ACTIONS" \
-          --create-repo-if-missing
+          --external-checks-dir custom-appsec-rule \
