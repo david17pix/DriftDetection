@@ -44,4 +44,3 @@ jobs:
             --repo-id "$REPO_ID" \
             --branch "$BRANCH" \
             --external-checks-dir custom-appsec-rule \
-            --upload-mode no-upload
